@@ -1,0 +1,12 @@
+﻿{
+  "ID": "915f45f7747440f7828621bd8ec0f298",
+  "ActionKeyword": "*",
+  "Name": "Wox.Plugin.Bang",
+  "Description": "Search on thousands of sites directly, with DuckDuckGo bangs",
+  "Author": "Ioannis G. (@JohnTheGr8)",
+  "Version": "1.0.0",
+  "Language": "csharp",
+  "Website": "https://github.com/JohnTheGr8/Wox.Plugin.Bang",
+  "IcoPath": "icon.png",
+  "ExecuteFileName": "Wox.Plugin.Bang.dll"
+}
