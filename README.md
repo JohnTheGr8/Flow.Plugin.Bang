@@ -1,4 +1,4 @@
-Wox.Plugin.Bang
+Wox.Plugin.Bang [![Build status](https://ci.appveyor.com/api/projects/status/ioxkuogbyom54q6t/branch/master?svg=true)](https://ci.appveyor.com/project/JohnTheGr8/wox-plugin-bang/branch/master)
 ==================
 
 A plugin for the [Wox Launcher](https://github.com/Wox-launcher/Wox)
