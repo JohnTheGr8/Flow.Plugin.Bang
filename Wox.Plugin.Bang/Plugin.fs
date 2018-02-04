@@ -17,14 +17,14 @@ type BangResult =
     { Redirect      : string }
 
 type BangClient() =
-
-    member __.getBangSuggestions bang = async {
     
+    member __.getBangSuggestions bang = async {
+
         let restClient = RestClient "https://duckduckgo.com/"
 
         let req = RestRequest ( "ac/", Method.GET )
     
-        req.AddParameter ("q", bang)
+        req.AddParameter ("q", bang) |> ignore
     
         let! resp = 
             restClient.ExecuteTaskAsync req 
@@ -39,9 +39,9 @@ type BangClient() =
 
         let req = RestRequest ( "/", Method.GET )
     
-        req.AddParameter ("q", search)
-        req.AddParameter ("format", "json")
-        req.AddParameter ("no_redirect", 1)
+        req.AddParameter ("q", search) |> ignore
+        req.AddParameter ("format", "json") |> ignore
+        req.AddParameter ("no_redirect", 1) |> ignore
     
         let! resp = 
             restClient.ExecuteTaskAsync req 
@@ -65,6 +65,8 @@ type BangPlugin() =
 
     let mutable PluginContext = PluginInitContext()
 
+    let mutable cache : (string * string) list = List.empty
+
     let openUrl (url:string) = 
         Process.Start url |> ignore
         true
@@ -78,15 +80,17 @@ type BangPlugin() =
         >> Async.RunSynchronously 
         >> function
         | Choice1Of2 result -> f result
-        | Choice2Of2 error -> [ Result ( Title = "Error occured", SubTitle = error.Message ) ]
+        | Choice2Of2 error -> [ Result ( Title = "Error occured", SubTitle = error.Message, IcoPath = "icon.png" ) ]
 
     interface IPlugin with
         member this.Init (context:PluginInitContext) = 
             PluginContext <- context
 
         member this.Query (q:Query) =
-            
-            if not (q.FirstSearch.StartsWith("!")) then List<Result> [] else
+
+            if String.IsNullOrWhiteSpace q.Search ||
+               q.Search = "!" ||
+               not (q.FirstSearch.StartsWith("!")) then List<Result> [] else
 
             let search = q.Search.Split ' ' |> Array.toList
 
@@ -94,21 +98,33 @@ type BangPlugin() =
             | [ b ] -> 
                 client.getBangSuggestions b
                 |> continueWith ( List.map (fun s -> 
+                    cache <- (s.phrase, s.snippet) :: cache |> List.distinct
+
                     Result ( Title     = s.phrase,
-                             SubTitle  = s.snippet,
+                             SubTitle  = sprintf "Search %s" s.snippet,
+                             Score     = s.score,
+                             IcoPath    = "icon.png",
                              Action    = fun _ -> changeQuery s.phrase )))
 
             | [ b; e ] when String.IsNullOrWhiteSpace e ->
-                [ Result ( Title      = "Type Search Term",
-                           SubTitle   = "" ) ]
+                let _,snip = cache |> List.find (fun (bg,_) -> bg = b) 
+
+                [ Result ( Title      = sprintf "Search %s" snip,
+                           SubTitle   = "Type a search term",
+                           IcoPath    = "icon.png",
+                           Score      = 10000 ) ]
 
             | h::tail -> 
                 let search = String.concat " " (h :: tail)
 
                 client.getBangSearchResults search
                 |> continueWith (fun r ->
-                    [ Result ( Title      = "Search",
+                    let _,snip = cache |> List.find (fun (b,_) -> b = h) 
+
+                    [ Result ( Title      = sprintf "Search %s for '%s'" snip q.SecondToEndSearch,
                                SubTitle   = r.Redirect,
+                               Score      = 10000,
+                               IcoPath    = "icon.png",
                                Action     = fun _ -> openUrl r.Redirect ) ] )
 
             | [ ] -> []
