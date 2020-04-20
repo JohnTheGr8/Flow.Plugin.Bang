@@ -27,7 +27,7 @@ type BangClient() =
         req.AddParameter ("q", bang) |> ignore
     
         let! resp = 
-            restClient.ExecuteTaskAsync req 
+            restClient.ExecuteAsync req
             |> Async.AwaitTask
     
         return JsonConvert.DeserializeObject<AutoCompleteSuggestion list> resp.Content
@@ -44,7 +44,7 @@ type BangClient() =
         req.AddParameter ("no_redirect", 1) |> ignore
     
         let! resp = 
-            restClient.ExecuteTaskAsync req 
+            restClient.ExecuteAsync req
             |> Async.AwaitTask
     
         return JsonConvert.DeserializeObject<BangResult> resp.Content
