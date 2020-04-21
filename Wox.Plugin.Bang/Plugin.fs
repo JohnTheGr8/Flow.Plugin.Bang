@@ -65,7 +65,8 @@ type BangPlugin() =
 
     let mutable PluginContext = PluginInitContext()
 
-    let mutable cache : (string * string) list = List.empty
+    // cache !bangs and their snippet names
+    let cache = Dictionary<string, string> ()
 
     let openUrl (url:string) = 
         Process.Start url |> ignore
@@ -98,7 +99,7 @@ type BangPlugin() =
             | [ b ] -> 
                 client.getBangSuggestions b
                 |> continueWith ( List.map (fun s -> 
-                    cache <- (s.phrase, s.snippet) :: cache |> List.distinct
+                    cache.[s.phrase] <- s.snippet
 
                     Result ( Title     = s.phrase,
                              SubTitle  = sprintf "Search %s" s.snippet,
@@ -107,9 +108,8 @@ type BangPlugin() =
                              Action    = fun _ -> changeQuery s.phrase )))
 
             | [ b; e ] when String.IsNullOrWhiteSpace e ->
-                let _,snip = cache |> List.find (fun (bg,_) -> bg = b) 
 
-                [ Result ( Title      = sprintf "Search %s" snip,
+                [ Result ( Title      = sprintf "Search %s" cache.[b],
                            SubTitle   = "Type a search term",
                            IcoPath    = "icon.png",
                            Score      = 10000 ) ]
@@ -119,9 +119,7 @@ type BangPlugin() =
 
                 client.getBangSearchResults search
                 |> continueWith (fun r ->
-                    let _,snip = cache |> List.find (fun (b,_) -> b = h) 
-
-                    [ Result ( Title      = sprintf "Search %s for '%s'" snip q.SecondToEndSearch,
+                    [ Result ( Title      = sprintf "Search %s for '%s'" cache.[h] q.SecondToEndSearch,
                                SubTitle   = r.Redirect,
                                Score      = 10000,
                                IcoPath    = "icon.png",
