@@ -1,16 +1,72 @@
 namespace Wox.Plugin.Bang
 
 open Wox.Plugin
-open System
+
+module PluginResult =
+
+    let ofBangSuggestion changeQuery (search: BangPhraseSuggestion) = 
+        Result ( Title     = search.phrase,
+                 SubTitle  = sprintf "Search %s" search.snippet,
+                 Score     = search.score,
+                 IcoPath   = "icon.png",
+                 Action    = fun _ -> changeQuery search.phrase )
+
+    let ofBangDetails (details: BangDetails) = 
+        Result ( Title      = sprintf "Search %s" details.snippet,
+                 SubTitle   = "Type a search term",
+                 IcoPath    = "icon.png",
+                 Score      = 10000 )
+
+    let ofBangSearch openUrl (result: BangSearchResult) =
+        Result ( Title      = sprintf "Search %s for '%s'" result.bang.snippet result.search,
+                 SubTitle   = result.redirect,
+                 Score      = 10000,
+                 IcoPath    = "icon.png",
+                 Action     = fun _ -> openUrl result.redirect )
+
+    let bangUnknown bang = 
+        Result ( Title      = "Unknown bang",
+                 SubTitle   = sprintf "Bang `%s` could not be found" bang,
+                 IcoPath    = "icon.png",
+                 Score      = 10000 )
+
+    let apiError (exn: exn) = 
+        Result ( Title = "Error occured", SubTitle = exn.Message, IcoPath = "icon.png" )
+
+module QueryImpl = 
+
+    let (|BangSearch|_|) (search: string) = 
+        if search.Contains " " then None else
+        if search.StartsWith "!" then Some search else
+        None
+
+    let handleQuery changeQuery openUrl = function
+        | [ BangSearch bang ] ->
+            // just the bang symbol was typed
+            Ducky.getBangSuggestions bang
+            |> AsyncList.map (PluginResult.ofBangSuggestion changeQuery)
+        
+        | [ BangSearch bang; "" ] ->
+            // bang phrase and empty search
+            Ducky.getBangDetails bang
+            |> Async.foldOption PluginResult.ofBangDetails (PluginResult.bangUnknown bang)
+            |> AsyncList.singleton
+
+        | BangSearch bang :: siteSearch ->
+            // bang phrase and search
+            Ducky.searchWithBang bang (String.concat " " siteSearch)
+            |> Async.foldOption (PluginResult.ofBangSearch openUrl) (PluginResult.bangUnknown bang)
+            |> AsyncList.singleton
+
+        | _ ->
+            async { return [] }
+
 open System.Collections.Generic
 open System.Diagnostics
 
 type BangPlugin() =
 
     let mutable PluginContext = PluginInitContext()
-
-    // cache !bangs and their snippet names
-    let cache = Dictionary<string, string> ()
 
     let openUrl (url:string) = 
         Process.Start url |> ignore
@@ -20,54 +76,16 @@ type BangPlugin() =
         PluginContext.API.ChangeQuery <| sprintf "%s " bang
         false
 
-    let continueWith f = 
-        Async.Catch 
-        >> Async.RunSynchronously 
-        >> function
-        | Choice1Of2 result -> f result
-        | Choice2Of2 error -> [ Result ( Title = "Error occured", SubTitle = error.Message, IcoPath = "icon.png" ) ]
-
     interface IPlugin with
         member this.Init (context:PluginInitContext) = 
             PluginContext <- context
 
-        member this.Query (q:Query) =
-
-            if String.IsNullOrWhiteSpace q.Search ||
-               q.Search = "!" ||
-               not (q.FirstSearch.StartsWith("!")) then List<Result> [] else
-
-            let search = q.Search.Split ' ' |> Array.toList
-
-            match search with
-            | [ b ] -> 
-                DuckDuckGoApi.getBangSuggestions b
-                |> continueWith ( List.map (fun s -> 
-                    cache.[s.phrase] <- s.snippet
-
-                    Result ( Title     = s.phrase,
-                             SubTitle  = sprintf "Search %s" s.snippet,
-                             Score     = s.score,
-                             IcoPath    = "icon.png",
-                             Action    = fun _ -> changeQuery s.phrase )))
-
-            | [ b; e ] when String.IsNullOrWhiteSpace e ->
-
-                [ Result ( Title      = sprintf "Search %s" cache.[b],
-                           SubTitle   = "Type a search term",
-                           IcoPath    = "icon.png",
-                           Score      = 10000 ) ]
-
-            | bang :: siteSearch ->
-
-                DuckDuckGoApi.getBangSearchResults bang (String.concat " " siteSearch)
-                |> continueWith (fun r ->
-                    [ Result ( Title      = sprintf "Search %s for '%s'" cache.[bang] q.SecondToEndSearch,
-                               SubTitle   = r.Redirect,
-                               Score      = 10000,
-                               IcoPath    = "icon.png",
-                               Action     = fun _ -> openUrl r.Redirect ) ] )
-
-            | [ ] -> []
-
+        member this.Query (query: Query) =
+            List.ofArray query.Terms
+            |> QueryImpl.handleQuery changeQuery openUrl
+            |> Async.Catch
+            |> Async.RunSynchronously
+            |> function
+                | Choice1Of2 results -> results
+                | Choice2Of2 error -> [ PluginResult.apiError error ]
             |> List<Result>

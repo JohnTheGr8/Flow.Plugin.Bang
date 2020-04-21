@@ -4,6 +4,7 @@
     <TargetFramework>net452</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Helpers.fs" />
     <Compile Include="DuckDuckGoApi.fs" />
     <Compile Include="Plugin.fs" />
   </ItemGroup>
