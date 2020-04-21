@@ -1,67 +1,11 @@
 namespace Wox.Plugin.Bang
 
-//--------------------------------------------
-//  DuckDuckGo API
-//--------------------------------------------
-
-open Newtonsoft.Json
-open RestSharp
-
-type AutoCompleteSuggestion =
-    { phrase        : string
-      score         : int
-      snippet       : string
-      image         : string }
-
-type BangResult =
-    { Redirect      : string }
-
-type BangClient() =
-    
-    member __.getBangSuggestions bang = async {
-
-        let restClient = RestClient "https://duckduckgo.com/"
-
-        let req = RestRequest ( "ac/", Method.GET )
-    
-        req.AddParameter ("q", bang) |> ignore
-    
-        let! resp = 
-            restClient.ExecuteAsync req
-            |> Async.AwaitTask
-    
-        return JsonConvert.DeserializeObject<AutoCompleteSuggestion list> resp.Content
-    }
-
-    member __.getBangSearchResults search = async {
-
-        let restClient = RestClient "https://api.duckduckgo.com/"
-
-        let req = RestRequest ( "/", Method.GET )
-    
-        req.AddParameter ("q", search) |> ignore
-        req.AddParameter ("format", "json") |> ignore
-        req.AddParameter ("no_redirect", 1) |> ignore
-    
-        let! resp = 
-            restClient.ExecuteAsync req
-            |> Async.AwaitTask
-    
-        return JsonConvert.DeserializeObject<BangResult> resp.Content
-    }
-
-//--------------------------------------------
-//  Plugin
-//--------------------------------------------
-
 open Wox.Plugin
 open System
 open System.Collections.Generic
 open System.Diagnostics
 
 type BangPlugin() =
-
-    let client = BangClient()
 
     let mutable PluginContext = PluginInitContext()
 
@@ -97,7 +41,7 @@ type BangPlugin() =
 
             match search with
             | [ b ] -> 
-                client.getBangSuggestions b
+                DuckDuckGoApi.getBangSuggestions b
                 |> continueWith ( List.map (fun s -> 
                     cache.[s.phrase] <- s.snippet
 
@@ -114,12 +58,11 @@ type BangPlugin() =
                            IcoPath    = "icon.png",
                            Score      = 10000 ) ]
 
-            | h::tail -> 
-                let search = String.concat " " (h :: tail)
+            | bang :: siteSearch ->
 
-                client.getBangSearchResults search
+                DuckDuckGoApi.getBangSearchResults bang (String.concat " " siteSearch)
                 |> continueWith (fun r ->
-                    [ Result ( Title      = sprintf "Search %s for '%s'" cache.[h] q.SecondToEndSearch,
+                    [ Result ( Title      = sprintf "Search %s for '%s'" cache.[bang] q.SecondToEndSearch,
                                SubTitle   = r.Redirect,
                                Score      = 10000,
                                IcoPath    = "icon.png",
