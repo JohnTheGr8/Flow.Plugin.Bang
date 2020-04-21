@@ -6,3 +6,11 @@ nuget Wox.Plugin
 nuget RestSharp
 nuget Newtonsoft.Json
 nuget FSharp.Core
+
+group Tests
+    source https://www.nuget.org/api/v2
+    framework: net461
+
+    nuget Expecto ~> 8.13
+    nuget YoloDev.Expecto.TestSdk
+    nuget Microsoft.NET.Test.Sdk

@@ -1,0 +1,4 @@
+group Tests
+    Expecto
+    YoloDev.Expecto.TestSdk
+    Microsoft.NET.Test.Sdk
