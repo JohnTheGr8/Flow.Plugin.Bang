@@ -15,7 +15,7 @@ module PluginResult =
         Result ( Title      = sprintf "Search %s" details.snippet,
                  SubTitle   = "Type a search term",
                  IcoPath    = "icon.png",
-                 Score      = 10000 )
+                 Score      = details.score )
 
     let ofBangSearch openUrl (result: BangSearchResult) =
         Result ( Title      = sprintf "Search %s for '%s'" result.bang.snippet result.search,
@@ -41,6 +41,10 @@ module QueryImpl =
         None
 
     let handleQuery changeQuery openUrl = function
+        | [ BangSearch "!" ] ->
+            Ducky.getBangSuggestionsOrDefault ()
+            |> AsyncList.map (PluginResult.ofBangSuggestion changeQuery)
+
         | [ BangSearch bang ] ->
             // just the bang symbol was typed
             Ducky.getBangSuggestions bang

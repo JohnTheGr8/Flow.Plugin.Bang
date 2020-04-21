@@ -82,7 +82,7 @@ module Ducky =
 
             for result in results do
                 // also add every result to the details cache
-                knownBangsCache.TryAdd (result.phrase, result) |> ignore
+                knownBangsCache.TryAdd (result.phrase, { result with score = 0 }) |> ignore
 
             return results
         }
@@ -91,10 +91,13 @@ module Ducky =
     let getBangDetails bang = async {
         match knownBangsCache.TryGetValue bang with
         | true, res ->
-            return Some res
+            let result = { res with score = res.score + 1 }
+            knownBangsCache.[bang] <- result
+            return Some result
         | false, _ ->
             match! DuckDuckGoApi.getBangDetails bang with
             | Some result ->
+                let result = { result with score = 0 }
                 // add retrieved details to the cache
                 knownBangsCache.[result.phrase] <- result
                 return Some result
@@ -114,3 +117,15 @@ module Ducky =
         | None ->
             return None
     }
+
+    /// if we have known !bangs stored in cache, return them sorted by most used
+    /// if not, return the default !bang suggestions from the DDG API
+    let getBangSuggestionsOrDefault () = 
+        if knownBangsCache.IsEmpty then
+            getBangSuggestions "!"
+        else
+            async {
+                return knownBangsCache.Values
+                    |> Seq.sortByDescending (fun b -> b.score)
+                    |> List.ofSeq
+            }

@@ -86,5 +86,25 @@ let allTests =
                 actual                  |> Expect.isSome "there should be exactly one result"
                 actual.Value.SubTitle   |> Expect.equal "redirect URL should match" "https://github.com/search?utf8=%E2%9C%93&q=Wox"
             }
+
+            testAsync "recently used bangs" {
+
+                let bangs =
+                    List.replicate 50 "!yt"
+                  @ List.replicate 30 "!steam"
+                  @ List.replicate 10 "!wiki"
+
+                for bang in bangs do
+                    do! checkQuery [ bang; "" ] |> Async.Ignore
+
+                let! results = checkQuery [ "!" ]
+
+                (results.Length, 3)
+                    |> Expect.isGreaterThanOrEqual "there should be at least 3 results"
+
+                results.[0].Title |> Expect.equal "first item should be"  "!yt"
+                results.[1].Title |> Expect.equal "second item should be" "!steam"
+                results.[2].Title |> Expect.equal "third item should be"  "!wiki"
+            }
         ]
     ]
