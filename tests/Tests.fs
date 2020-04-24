@@ -107,4 +107,37 @@ let allTests =
                 results.[2].Title |> Expect.equal "third item should be"  "!wiki"
             }
         ]
+
+        testList "cached methods" [
+
+            testAsync "getBangSuggestions performance" {
+
+                let notCached () =
+                    DuckDuckGoApi.getBangSuggestions "!nf"
+                    |> Async.RunSynchronously
+                    |> List.map (fun x -> { x with score = 0 })
+
+                let cached () =
+                    Ducky.getBangSuggestions "!nf"
+                    |> Async.RunSynchronously
+                    |> List.map (fun x -> { x with score = 0 })
+
+                (notCached, cached) ||> Expect.isFasterThan "cached getBangSuggestions is faster"
+            }
+
+            testAsync "getBangDetails performance" {
+
+                let notCached () =
+                    DuckDuckGoApi.getBangDetails "!maps"
+                    |> Async.RunSynchronously
+                    |> Option.map (fun x -> { x with score = 0 })
+
+                let cached () =
+                    Ducky.getBangDetails "!maps"
+                    |> Async.RunSynchronously
+                    |> Option.map (fun x -> { x with score = 0 })
+
+                (notCached, cached) ||> Expect.isFasterThan "cached getBangDetails is faster"
+            }
+        ]
     ]
