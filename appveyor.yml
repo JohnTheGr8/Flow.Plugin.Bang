@@ -15,5 +15,17 @@ build_script:
 
     dotnet pack -c Release
 
+after_build:
+- ps: >-
+    $zipSettings = @{
+        Path = ".\Wox.Plugin.Bang\bin\Release\net462\*.dll", ".\Wox.Plugin.Bang\bin\Release\net462\plugin.json", ".\Wox.Plugin.Bang\bin\Release\net462\*.png"
+        DestinationPath = "plugin.zip"
+    }
+
+    Compress-Archive @zipSettings
+
+    Rename-Item plugin.zip Wox.Plugin.Bang.wox
+
 artifacts:
     - path: Wox.Plugin.Bang\bin\Release\*.nupkg
+    - path: '*.wox'
