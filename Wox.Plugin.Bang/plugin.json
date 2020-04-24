@@ -4,7 +4,7 @@
   "Name": "Wox.Plugin.Bang",
   "Description": "Search on thousands of sites directly, with DuckDuckGo bangs",
   "Author": "Ioannis G. (@JohnTheGr8)",
-  "Version": "1.0.0",
+  "Version": "1.1.0",
   "Language": "csharp",
   "Website": "https://github.com/JohnTheGr8/Wox.Plugin.Bang",
   "IcoPath": "icon.png",
