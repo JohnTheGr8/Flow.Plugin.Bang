@@ -9,6 +9,6 @@ nuget FSharp.Core
 
 group Tests
     source https://www.nuget.org/api/v2
-    framework: net461
+    framework: auto-detect
 
     nuget Expecto
