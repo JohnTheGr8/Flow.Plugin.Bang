@@ -5,12 +5,16 @@ environment:
     DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
     DOTNET_CLI_TELEMETRY_OPTOUT: true
 
-build_script:
+before_build:
 - ps: >-
     dotnet --info
 
-    dotnet restore
+    dotnet tool restore
 
+    dotnet paket restore
+
+build_script:
+- ps: >-
     dotnet run -c Release -p ./tests/Wox.Plugin.Bang.Tests.fsproj -- --summary --colours 0
 
     dotnet pack -c Release
