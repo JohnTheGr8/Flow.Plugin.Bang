@@ -1,0 +1,14 @@
+{
+    "files.exclude": {
+        "[Dd]ebug/":true,
+        "[Rr]elease/":true,
+        "**/[Bb]in/":true,
+        "**/[Oo]bj/":true,
+        "[Tt]est[Rr]esult*/":true,
+        "packages/":true,
+        "paket-files/":true,
+        ".vs/": true,
+        ".ionide/": true,
+        "*.wox": true,
+    }
+}
