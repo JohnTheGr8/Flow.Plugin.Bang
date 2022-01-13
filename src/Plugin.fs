@@ -66,14 +66,13 @@ module QueryImpl =
             async { return [] }
 
 open System.Collections.Generic
-open System.Diagnostics
 
 type BangPlugin() =
 
     let mutable PluginContext = PluginInitContext()
 
     let openUrl (url:string) = 
-        Process.Start url |> ignore
+        do PluginContext.API.OpenUrl url
         true
 
     let changeQuery (bang:string) =
@@ -85,7 +84,7 @@ type BangPlugin() =
             PluginContext <- context
 
         member this.Query (query: Query) =
-            List.ofArray query.Terms
+            List.ofArray query.SearchTerms
             |> QueryImpl.handleQuery changeQuery openUrl
             |> Async.Catch
             |> Async.RunSynchronously

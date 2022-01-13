@@ -15,7 +15,7 @@ before_build:
 
 build_script:
 - ps: >-
-    dotnet run -c Release -p ./tests/Flow.Plugin.Bang.Tests.fsproj -- --summary --colours 0
+    dotnet run -c Release --project ./tests/Flow.Plugin.Bang.Tests.fsproj -- --summary --colours 0
 
     dotnet pack -c Release
 
