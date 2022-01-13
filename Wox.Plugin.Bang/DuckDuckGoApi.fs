@@ -21,36 +21,30 @@ module DuckDuckGoApi =
     open Newtonsoft.Json
     open RestSharp
 
-    let private getResponse<'response> (client: RestClient) request = async {
+    let private httpClient = RestClient()
+
+    let private getResponse<'response> request = async {
         let! response =
-            client.ExecuteAsync request |> Async.AwaitTask
+            httpClient.ExecuteAsync request |> Async.AwaitTask
 
         return JsonConvert.DeserializeObject<'response> response.Content
     }
 
-    let getBangSuggestions =
-        let restClient = RestClient "https://duckduckgo.com/"
+    let getBangSuggestions (bang: string) =
+        let request = 
+            RestRequest( "https://duckduckgo.com/ac/", Method.Get )
+                .AddParameter("q", bang)
 
-        fun (bang: string) ->
-            let req = RestRequest ( "ac/", Method.Get )
-            req.AddParameter ("q", bang) |> ignore
+        getResponse<BangPhraseSuggestion list> request
 
-            getResponse<BangPhraseSuggestion list> restClient req
+    let getBangSearchResults bang siteSearch =
+        let request =
+            RestRequest( "https://api.duckduckgo.com/", Method.Get )
+                .AddParameter("q", $"%s{bang} %s{siteSearch}")
+                .AddParameter("format", "json")
+                .AddParameter("no_redirect", 1)
 
-    let getBangSearchResults =
-        let restClient = RestClient "https://api.duckduckgo.com/"
-
-        fun bang siteSearch ->
-            let search =
-                sprintf "%s %s" bang siteSearch
-
-            let request =
-                RestRequest( "/", Method.Get )
-                    .AddParameter("q", search)
-                    .AddParameter("format", "json")
-                    .AddParameter("no_redirect", 1)
-
-            getResponse<BangResult> restClient request
+        getResponse<BangResult> request
 
     let getBangDetails bang = async {
         let! suggestions =
