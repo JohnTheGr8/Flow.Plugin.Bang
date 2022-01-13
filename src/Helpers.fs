@@ -1,4 +1,4 @@
-namespace Wox.Plugin.Bang
+namespace Flow.Plugin.Bang
 
 [<RequireQualifiedAccess>]
 module Async =

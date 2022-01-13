@@ -1,7 +1,7 @@
-Wox.Plugin.Bang [![Build status](https://ci.appveyor.com/api/projects/status/ioxkuogbyom54q6t/branch/master?svg=true)](https://ci.appveyor.com/project/JohnTheGr8/wox-plugin-bang/branch/master)
+Flow.Plugin.Bang [![Build status](https://ci.appveyor.com/api/projects/status/ioxkuogbyom54q6t/branch/master?svg=true)](https://ci.appveyor.com/project/JohnTheGr8/flow-plugin-bang/branch/master)
 ==================
 
-A plugin for the [Wox Launcher](https://github.com/Wox-launcher/Wox)
+A plugin for the [Flow Launcher](https://github.com/Flow-Launcher/Flow.Launcher)
 
 ### About
 

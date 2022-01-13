@@ -2,9 +2,9 @@ module Tests
 
 open Expecto
 open Expecto.Flip
-open Wox.Plugin.Bang
+open Flow.Plugin.Bang
 
-let checkQuery : _ -> Async<Wox.Plugin.Result list> =
+let checkQuery : _ -> Async<_ list> =
     let doNothing = fun _ -> false
     QueryImpl.handleQuery doNothing doNothing
 

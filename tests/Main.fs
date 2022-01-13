@@ -1,4 +1,4 @@
-﻿module Wox.Plugin.Bang.Tests
+﻿module Flow.Plugin.Bang.Tests
 
 open Expecto
 

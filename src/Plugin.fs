@@ -1,6 +1,6 @@
-namespace Wox.Plugin.Bang
+namespace Flow.Plugin.Bang
 
-open Wox.Plugin
+open Flow.Launcher.Plugin
 
 module PluginResult =
 

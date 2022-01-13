@@ -2,7 +2,7 @@ source https://www.nuget.org/api/v2
 
 framework: auto-detect
 
-nuget Wox.Plugin
+nuget Flow.Launcher.Plugin
 nuget RestSharp
 nuget Newtonsoft.Json
 nuget FSharp.Core
