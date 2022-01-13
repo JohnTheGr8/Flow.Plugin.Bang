@@ -41,16 +41,16 @@ module QueryImpl =
         None
 
     let handleQuery changeQuery openUrl = function
-        | [ BangSearch "!" ] ->
+        | BangSearch "!" :: [] ->
             Ducky.getBangSuggestionsOrDefault ()
             |> AsyncList.map (PluginResult.ofBangSuggestion changeQuery)
 
-        | [ BangSearch bang ] ->
+        | BangSearch bang :: [] ->
             // just the bang symbol was typed
             Ducky.getBangSuggestions bang
             |> AsyncList.map (PluginResult.ofBangSuggestion changeQuery)
         
-        | [ BangSearch bang; "" ] ->
+        | BangSearch bang :: "" :: [] ->
             // bang phrase and empty search
             Ducky.getBangDetails bang
             |> Async.foldOption PluginResult.ofBangDetails (PluginResult.bangUnknown bang)
