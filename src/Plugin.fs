@@ -1,6 +1,9 @@
 namespace Flow.Plugin.Bang
 
 open Flow.Launcher.Plugin
+open System.Collections.Generic
+open System.Threading
+open System.Threading.Tasks
 
 module PluginResult =
 
@@ -65,8 +68,6 @@ module QueryImpl =
         | _ ->
             async { return [] }
 
-open System.Collections.Generic
-
 type BangPlugin() =
 
     let mutable PluginContext = PluginInitContext()
@@ -79,16 +80,20 @@ type BangPlugin() =
         PluginContext.API.ChangeQuery <| sprintf "%s " bang
         false
 
-    interface IPlugin with
-        member this.Init (context:PluginInitContext) = 
+    interface IAsyncPlugin with
+        member this.InitAsync (context: PluginInitContext) : System.Threading.Tasks.Task =
             PluginContext <- context
 
-        member this.Query (query: Query) =
-            List.ofArray query.SearchTerms
-            |> QueryImpl.handleQuery changeQuery openUrl
-            |> Async.Catch
-            |> Async.RunSynchronously
-            |> function
-                | Choice1Of2 results -> results
-                | Choice2Of2 error -> [ PluginResult.apiError error ]
-            |> List<Result>
+            QueryImpl.handleQuery changeQuery openUrl ["!"]
+            |> Async.StartAsTask :> Task
+
+        member __.QueryAsync(query: Query, token: CancellationToken) =
+            let asyncQuery =
+                List.ofArray query.SearchTerms
+                |> QueryImpl.handleQuery changeQuery openUrl
+                |> Async.Catch
+                |> Async.map (function
+                    | Choice1Of2 results -> List<Result> results
+                    | Choice2Of2 error   -> List<Result> [ PluginResult.apiError error ])
+
+            Async.StartImmediateAsTask(asyncQuery, token)
