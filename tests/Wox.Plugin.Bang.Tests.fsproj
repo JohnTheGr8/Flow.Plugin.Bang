@@ -9,7 +9,7 @@
     <Compile Include="Main.fs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Wox.Plugin.Bang\Wox.Plugin.Bang.fsproj" />
+    <ProjectReference Include="..\src\Wox.Plugin.Bang.fsproj" />
   </ItemGroup>
   <ItemGroup>
     <None Include="paket.references" />

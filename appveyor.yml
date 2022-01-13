@@ -22,7 +22,7 @@ build_script:
 after_build:
 - ps: >-
     $zipSettings = @{
-        Path = ".\Wox.Plugin.Bang\bin\Release\net462\*.dll", ".\Wox.Plugin.Bang\bin\Release\net462\plugin.json", ".\Wox.Plugin.Bang\bin\Release\net462\*.png"
+        Path = ".\src\bin\Release\net462\*.dll", ".\src\bin\Release\net462\plugin.json", ".\src\bin\Release\net462\*.png"
         DestinationPath = "plugin.zip"
     }
 
@@ -31,5 +31,5 @@ after_build:
     Rename-Item plugin.zip Wox.Plugin.Bang.wox
 
 artifacts:
-    - path: Wox.Plugin.Bang\bin\Release\*.nupkg
+    - path: src\bin\Release\*.nupkg
     - path: '*.wox'
