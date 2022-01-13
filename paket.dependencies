@@ -6,9 +6,4 @@ nuget Wox.Plugin
 nuget RestSharp
 nuget Newtonsoft.Json
 nuget FSharp.Core
-
-group Tests
-    source https://www.nuget.org/api/v2
-    framework: auto-detect
-
-    nuget Expecto
+nuget Expecto

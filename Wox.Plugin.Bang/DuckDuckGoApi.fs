@@ -32,7 +32,7 @@ module DuckDuckGoApi =
         let restClient = RestClient "https://duckduckgo.com/"
 
         fun (bang: string) ->
-            let req = RestRequest ( "ac/", Method.GET )
+            let req = RestRequest ( "ac/", Method.Get )
             req.AddParameter ("q", bang) |> ignore
 
             getResponse<BangPhraseSuggestion list> restClient req
@@ -45,7 +45,7 @@ module DuckDuckGoApi =
                 sprintf "%s %s" bang siteSearch
 
             let request =
-                RestRequest( "/", Method.GET )
+                RestRequest( "/", Method.Get )
                     .AddParameter("q", search)
                     .AddParameter("format", "json")
                     .AddParameter("no_redirect", 1)
