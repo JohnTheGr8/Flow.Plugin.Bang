@@ -23,25 +23,30 @@ module PluginResult =
                  SubTitle  = sprintf "Search %s" search.snippet,
                  Score     = search.score,
                  IcoPath   = "icon.png",
-                 Action    = fun _ -> changeQuery search.phrase )
+                 Action    = (fun _ -> changeQuery search.phrase),
+                 AutoCompleteText = $"%s{search.phrase} " )
 
     let ofBangDetails (details: BangDetails) = 
         Result ( Title      = sprintf "%s : search %s" details.phrase details.snippet,
                  SubTitle   = "Type a search term",
                  IcoPath    = "icon.png",
-                 Score      = details.score )
+                 Score      = details.score,
+                 Action     = (fun _ -> changeQuery details.phrase),
+                 AutoCompleteText = $"%s{details.phrase} " )
 
     let ofBangSearch (result: BangSearchResult) =
         Result ( Title      = sprintf "Search %s for '%s'" result.bang.snippet result.search,
                  SubTitle   = result.redirect,
                  Score      = 10000,
                  IcoPath    = "icon.png",
-                 Action     = fun _ -> openUrl result.redirect )
+                 Action     = (fun _ -> openUrl result.redirect),
+                 AutoCompleteText = result.redirect )
 
     let bangUnknown bang = 
         Result ( Title      = "Unknown bang",
                  SubTitle   = sprintf "Bang `%s` could not be found" bang,
                  IcoPath    = "icon.png",
+                 AutoCompleteText = bang,
                  Score      = 10000 )
 
     let apiError (exn: exn) = 
