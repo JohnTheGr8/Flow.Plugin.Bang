@@ -1,13 +1,24 @@
 namespace Flow.Plugin.Bang
 
 open Flow.Launcher.Plugin
+open System
 open System.Collections.Generic
 open System.Threading
 open System.Threading.Tasks
 
 module PluginResult =
 
-    let ofBangSuggestion changeQuery (search: BangPhraseSuggestion) = 
+    let mutable PluginContext = PluginInitContext()
+
+    let openUrl (url: string) = 
+        do PluginContext.API.OpenUrl url
+        true
+
+    let changeQuery (bang: string) =
+        PluginContext.API.ChangeQuery $"%s{bang} "
+        false
+
+    let ofBangSuggestion (search: BangPhraseSuggestion) = 
         Result ( Title     = search.phrase,
                  SubTitle  = sprintf "Search %s" search.snippet,
                  Score     = search.score,
@@ -15,12 +26,12 @@ module PluginResult =
                  Action    = fun _ -> changeQuery search.phrase )
 
     let ofBangDetails (details: BangDetails) = 
-        Result ( Title      = sprintf "Search %s" details.snippet,
+        Result ( Title      = sprintf "%s : search %s" details.phrase details.snippet,
                  SubTitle   = "Type a search term",
                  IcoPath    = "icon.png",
                  Score      = details.score )
 
-    let ofBangSearch openUrl (result: BangSearchResult) =
+    let ofBangSearch (result: BangSearchResult) =
         Result ( Title      = sprintf "Search %s for '%s'" result.bang.snippet result.search,
                  SubTitle   = result.redirect,
                  Score      = 10000,
@@ -38,31 +49,30 @@ module PluginResult =
 
 module QueryImpl = 
 
-    let (|BangSearch|_|) (search: string) = 
-        if search.Contains " " then None else
-        if search.StartsWith "!" then Some search else
-        None
+    let (|BangSearch|_|) (first: string, rest: string) =
+        if first.StartsWith "!" && not (first.Contains " ") then
+            if String.IsNullOrWhiteSpace rest then
+                Some (first, "")
+            else
+                Some (first, rest)
+        else
+            None
 
-    let handleQuery changeQuery openUrl = function
-        | BangSearch "!" :: [] ->
-            Ducky.getBangSuggestionsOrDefault ()
-            |> AsyncList.map (PluginResult.ofBangSuggestion changeQuery)
-
-        | BangSearch bang :: [] ->
+    let handleQuery = function
+        | BangSearch ("!", "") ->
             // just the bang symbol was typed
-            Ducky.getBangSuggestions bang
-            |> AsyncList.map (PluginResult.ofBangSuggestion changeQuery)
-        
-        | BangSearch bang :: "" :: [] ->
-            // bang phrase and empty search
-            Ducky.getBangDetails bang
-            |> Async.foldOption PluginResult.ofBangDetails (PluginResult.bangUnknown bang)
-            |> AsyncList.singleton
+            Ducky.getBangSuggestionsOrDefault ()
+            |> AsyncList.map PluginResult.ofBangSuggestion
 
-        | BangSearch bang :: siteSearch ->
+        | BangSearch (bang, "") ->
+            // just a bang typed
+            Ducky.getBangSuggestions bang
+            |> AsyncList.map PluginResult.ofBangDetails
+
+        | BangSearch (bang, siteSearch) ->
             // bang phrase and search
-            Ducky.searchWithBang bang (String.concat " " siteSearch)
-            |> Async.foldOption (PluginResult.ofBangSearch openUrl) (PluginResult.bangUnknown bang)
+            Ducky.searchWithBang bang siteSearch
+            |> Async.foldOption PluginResult.ofBangSearch (PluginResult.bangUnknown bang)
             |> AsyncList.singleton
 
         | _ ->
@@ -70,27 +80,16 @@ module QueryImpl =
 
 type BangPlugin() =
 
-    let mutable PluginContext = PluginInitContext()
-
-    let openUrl (url:string) = 
-        do PluginContext.API.OpenUrl url
-        true
-
-    let changeQuery (bang:string) =
-        PluginContext.API.ChangeQuery <| sprintf "%s " bang
-        false
-
     interface IAsyncPlugin with
-        member this.InitAsync (context: PluginInitContext) : System.Threading.Tasks.Task =
-            PluginContext <- context
+        member this.InitAsync (context: PluginInitContext) : Task =
+            PluginResult.PluginContext <- context
 
-            QueryImpl.handleQuery changeQuery openUrl ["!"]
+            QueryImpl.handleQuery ("!", "")
             |> Async.StartAsTask :> Task
 
         member __.QueryAsync(query: Query, token: CancellationToken) =
             let asyncQuery =
-                List.ofArray query.SearchTerms
-                |> QueryImpl.handleQuery changeQuery openUrl
+                QueryImpl.handleQuery (query.FirstSearch, query.SecondToEndSearch)
                 |> Async.Catch
                 |> Async.map (function
                     | Choice1Of2 results -> List<Result> results

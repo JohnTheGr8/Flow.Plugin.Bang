@@ -4,10 +4,6 @@ open Expecto
 open Expecto.Flip
 open Flow.Plugin.Bang
 
-let checkQuery : _ -> Async<_ list> =
-    let doNothing = fun _ -> false
-    QueryImpl.handleQuery doNothing doNothing
-
 let allTests =
     testList "all tests" [
 
@@ -57,30 +53,31 @@ let allTests =
         testList "QueryImpl.handleQuery" [
 
             testAsync "no query terms" {
-                let! results = checkQuery []
+                let! results = QueryImpl.handleQuery ("", "")
 
                 results |> Expect.isEmpty "should be empty"
             }
 
             testAsync "just a bang phrase" {
-                let! results = checkQuery [ "!imdb" ]
+                let! results = QueryImpl.handleQuery ("!imdb", "")
                 let actual = List.tryHead results
 
                 actual                  |> Expect.isSome "results should not be empty"
-                actual.Value.Title      |> Expect.equal "result title should equal"    "!imdb"
-                actual.Value.SubTitle   |> Expect.equal "result subtitle should equal" "Search IMDB"
+                actual.Value.Title      |> Expect.equal "result title should equal"    "!imdb : search IMDB"
+                actual.Value.SubTitle   |> Expect.equal "result subtitle should equal" "Type a search term"
             }
 
-            testAsync "bang phrase and space" {
-                let! results = checkQuery [ "!tw"; "" ]
-                let actual = List.tryExactlyOne results
+            testAsync "just a bang phrase, again" {
+                let! results = QueryImpl.handleQuery ("!tw", "")
+                let actual = List.tryHead results
 
-                actual              |> Expect.isSome "there should be exactly one result"
-                actual.Value.Title  |> Expect.equal "result subtitle should equal" "Search Twitter"
+                actual                  |> Expect.isSome "results should not be empty"
+                actual.Value.Title      |> Expect.equal "result subtitle should equal" "!tw : search Twitter"
+                actual.Value.SubTitle   |> Expect.equal "result subtitle should equal" "Type a search term"
             }
 
             testAsync "bang phrase and search" {
-                let! results = checkQuery [ "!gh"; "Wox" ]
+                let! results = QueryImpl.handleQuery ("!gh", "Wox")
                 let actual = List.tryExactlyOne results
 
                 actual                  |> Expect.isSome "there should be exactly one result"
@@ -95,9 +92,9 @@ let allTests =
                   @ List.replicate 10 "!wiki"
 
                 for bang in bangs do
-                    do! checkQuery [ bang; "" ] |> Async.Ignore
+                    do! QueryImpl.handleQuery (bang, "") |> Async.Ignore
 
-                let! results = checkQuery [ "!" ]
+                let! results = QueryImpl.handleQuery ("!", "")
 
                 (results.Length, 3)
                     |> Expect.isGreaterThanOrEqual "there should be at least 3 results"

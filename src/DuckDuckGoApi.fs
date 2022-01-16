@@ -68,7 +68,15 @@ module Ducky =
     let getBangSuggestions bang = async {
         match bangSuggestionsCache.TryGetValue bang with
         | true, res ->
+            // if a full bang was typed and it exists in our knownBangsCache, bump its score
+            match res |> List.tryFind (fun x -> x.phrase = bang) with
+            | Some suggestion -> 
+                do knownBangsCache.AddOrUpdate(bang, suggestion, fun _ b -> { b with score = b.score + 1 }) |> ignore
+            | None -> 
+                ()
+
             return res
+
         | false, _ ->
             let! results = DuckDuckGoApi.getBangSuggestions bang
             // add all suggestions to the cache
