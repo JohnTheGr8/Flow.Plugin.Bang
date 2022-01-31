@@ -9,12 +9,13 @@ Take advantage of [DuckDuckGo's bangs](https://duckduckgo.com/bang) to search on
 
 ### Demo
 
-![demo gif](https://i.imgur.com/OYWg9AT.gif)
+![demo gif](https://user-images.githubusercontent.com/697917/151886107-1ea5f15b-1cfc-4bee-8ad0-1ed42e26302a.gif)
 
 ### Credits
 
 - [RestSharp](https://github.com/restsharp/RestSharp) : Simple REST and HTTP API Client for .NET
 - [Json.Net](https://github.com/JamesNK/Newtonsoft.Json) : popular high-performance JSON framework for .NET
+- [Expecto](https://github.com/haf/expecto) : A smooth testing lib for F#
 
 ### License
 
