@@ -89,7 +89,7 @@ let allTests =
                 let bangs =
                     List.replicate 50 "!yt"
                   @ List.replicate 30 "!steam"
-                  @ List.replicate 10 "!wiki"
+                  @ List.replicate 10 "!lb"
 
                 for bang in bangs do
                     do! QueryImpl.handleQuery (bang, "") |> Async.Ignore
@@ -101,7 +101,7 @@ let allTests =
 
                 results.[0].Title |> Expect.equal "first item should be"  "!yt"
                 results.[1].Title |> Expect.equal "second item should be" "!steam"
-                results.[2].Title |> Expect.equal "third item should be"  "!wiki"
+                results.[2].Title |> Expect.equal "third item should be"  "!lb"
             }
         ]
 
