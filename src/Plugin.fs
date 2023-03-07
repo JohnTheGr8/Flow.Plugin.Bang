@@ -52,6 +52,7 @@ module PluginResult =
             Score      = 10000,
             IcoPath    = "icon.png",
             Action     = (fun _ -> openUrl result.redirect),
+            CopyText   = result.redirect,
             AutoCompleteText = result.redirect,
             // highlight the search part of the title
             TitleHighlightData = List<int> [ hlStart .. hlStart + result.search.Length - 1 ]
