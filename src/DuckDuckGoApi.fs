@@ -24,8 +24,11 @@ module DuckDuckGoApi =
     let private httpClient = new RestClient()
 
     let private getResponse<'response> request = async {
+        let! token =
+            Async.CancellationToken
+
         let! response =
-            httpClient.ExecuteAsync request |> Async.AwaitTask
+            httpClient.ExecuteAsync(request, token) |> Async.AwaitTask
 
         return JsonConvert.DeserializeObject<'response> response.Content
     }
