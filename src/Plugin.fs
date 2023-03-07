@@ -26,20 +26,25 @@ module PluginResult =
                  Action    = (fun _ -> changeQuery search.phrase),
                  AutoCompleteText = $"%s{search.phrase} " )
 
-    let ofBangDetails (details: BangDetails) = 
+    let ofBangDetails (search: string) (details: BangDetails) =
         Result ( Title      = sprintf "%s : search %s" details.phrase details.snippet,
                  SubTitle   = "Type a search term",
                  IcoPath    = "icon.png",
                  Score      = details.score,
                  Action     = (fun _ -> changeQuery details.phrase),
+                 TitleHighlightData = List<int> [ 0 .. search.Length - 1 ],
                  AutoCompleteText = $"%s{details.phrase} " )
 
     let ofBangSearch (result: BangSearchResult) =
-        Result ( Title      = sprintf "Search %s for '%s'" result.bang.snippet result.search,
+        let title = $"Search %s{result.bang.snippet} for '%s{result.search}'"
+        let hlStart = title.IndexOf result.search
+
+        Result ( Title      = title,
                  SubTitle   = result.redirect,
                  Score      = 10000,
                  IcoPath    = "icon.png",
                  Action     = (fun _ -> openUrl result.redirect),
+                 TitleHighlightData = List<int> [ hlStart .. hlStart + result.search.Length - 1 ],
                  AutoCompleteText = result.redirect )
 
     let bangUnknown bang = 
@@ -72,7 +77,7 @@ module QueryImpl =
         | BangSearch (bang, "") ->
             // just a bang typed
             Ducky.getBangSuggestions bang
-            |> AsyncList.map PluginResult.ofBangDetails
+            |> AsyncList.map (PluginResult.ofBangDetails bang)
 
         | BangSearch (bang, siteSearch) ->
             // bang phrase and search
