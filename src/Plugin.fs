@@ -19,40 +19,52 @@ module PluginResult =
         false
 
     let ofBangSuggestion (search: BangPhraseSuggestion) = 
-        Result ( Title     = search.phrase,
-                 SubTitle  = sprintf "Search %s" search.snippet,
-                 Score     = search.score,
-                 IcoPath   = "icon.png",
-                 Action    = (fun _ -> changeQuery search.phrase),
-                 AutoCompleteText = $"%s{search.phrase} " )
+        Result (
+            Title     = search.phrase,
+            SubTitle  = "Search " + search.snippet,
+            Score     = search.score,
+            IcoPath   = "icon.png",
+            Action    = (fun _ -> changeQuery search.phrase),
+            // autocomplete emulates the ChangeQuery behaviour
+            AutoCompleteText = search.phrase + " "
+        )
 
     let ofBangDetails (search: string) (details: BangDetails) =
-        Result ( Title      = sprintf "%s : search %s" details.phrase details.snippet,
-                 SubTitle   = "Type a search term",
-                 IcoPath    = "icon.png",
-                 Score      = details.score,
-                 Action     = (fun _ -> changeQuery details.phrase),
-                 TitleHighlightData = List<int> [ 0 .. search.Length - 1 ],
-                 AutoCompleteText = $"%s{details.phrase} " )
+        Result (
+            Title      = details.phrase + " : search " + details.snippet,
+            SubTitle   = "Type a search term",
+            IcoPath    = "icon.png",
+            Score      = details.score,
+            Action     = (fun _ -> changeQuery details.phrase),
+            // autocomplete emulates the ChangeQuery behaviour
+            AutoCompleteText = details.phrase + " ",
+            // highlight the bang at the start of the title
+            TitleHighlightData = List<int> [ 0 .. search.Length - 1 ]
+        )
 
     let ofBangSearch (result: BangSearchResult) =
         let title = $"Search %s{result.bang.snippet} for '%s{result.search}'"
         let hlStart = title.IndexOf result.search
 
-        Result ( Title      = title,
-                 SubTitle   = result.redirect,
-                 Score      = 10000,
-                 IcoPath    = "icon.png",
-                 Action     = (fun _ -> openUrl result.redirect),
-                 TitleHighlightData = List<int> [ hlStart .. hlStart + result.search.Length - 1 ],
-                 AutoCompleteText = result.redirect )
+        Result (
+            Title      = title,
+            SubTitle   = result.redirect,
+            Score      = 10000,
+            IcoPath    = "icon.png",
+            Action     = (fun _ -> openUrl result.redirect),
+            AutoCompleteText = result.redirect,
+            // highlight the search part of the title
+            TitleHighlightData = List<int> [ hlStart .. hlStart + result.search.Length - 1 ]
+        )
 
     let bangUnknown bang = 
-        Result ( Title      = "Unknown bang",
-                 SubTitle   = sprintf "Bang `%s` could not be found" bang,
-                 IcoPath    = "icon.png",
-                 AutoCompleteText = bang,
-                 Score      = 10000 )
+        Result (
+            Title      = "Unknown bang",
+            SubTitle   = $"Bang `%s{bang}` could not be found",
+            Score      = 10000,
+            IcoPath    = "icon.png",
+            AutoCompleteText = bang
+        )
 
     let apiError (exn: exn) = 
         Result ( Title = "Error occured", SubTitle = exn.Message, IcoPath = "icon.png" )
