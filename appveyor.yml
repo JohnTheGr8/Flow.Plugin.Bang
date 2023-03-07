@@ -22,7 +22,7 @@ build_script:
 after_build:
 - ps: >-
     $zipSettings = @{
-        Path = ".\src\bin\Release\*"
+        Path = Get-ChildItem -Path ".\src\bin\Release\*" -Exclude "*.nupkg"
         DestinationPath = "Flow.Plugin.Bang.zip"
     }
 
