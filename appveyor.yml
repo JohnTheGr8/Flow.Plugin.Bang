@@ -22,7 +22,7 @@ build_script:
 after_build:
 - ps: >-
     $zipSettings = @{
-        Path = ".\src\bin\Release\net5.0-windows\*"
+        Path = ".\src\bin\Release\*"
         DestinationPath = "Flow.Plugin.Bang.zip"
     }
 
