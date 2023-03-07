@@ -21,7 +21,7 @@ module DuckDuckGoApi =
     open Newtonsoft.Json
     open RestSharp
 
-    let private httpClient = RestClient()
+    let private httpClient = new RestClient()
 
     let private getResponse<'response> request = async {
         let! response =
