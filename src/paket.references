@@ -1,4 +1,5 @@
-﻿Flow.Launcher.Plugin
+Flow.Launcher.Plugin
 RestSharp
 Newtonsoft.Json
 FSharp.Core
+IcedTasks

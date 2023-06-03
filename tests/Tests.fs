@@ -2,22 +2,24 @@ module Tests
 
 open Expecto
 open Expecto.Flip
+open Flow.Launcher.Plugin
 open Flow.Plugin.Bang
+open System.Threading
 
 let allTests =
     testList "all tests" [
 
         testList "DuckDuckGoApi.getBangSuggestions" [
 
-            testAsync "just the bang" {
-                let! results = DuckDuckGoApi.getBangSuggestions "!"
+            testTask "just the bang" {
+                let! results = DuckDuckGoApi.getBangSuggestions "!" CancellationToken.None
 
                 results
                     |> Expect.isNonEmpty "there should be some results"
             }
 
-            testAsync "github bang phrases" {
-                let! results = DuckDuckGoApi.getBangSuggestions "!gh"
+            testTask "github bang phrases" {
+                let! (results: list<_>) = DuckDuckGoApi.getBangSuggestions "!gh" CancellationToken.None
 
                 (results.Length, 10)
                     |> Expect.isGreaterThan "should have at least 10 suggestions"
@@ -31,8 +33,8 @@ let allTests =
                     |> Expect.isSome "there should be a !ghcode result"
             }
 
-            testAsync "google bang phrases" {
-                let! results = DuckDuckGoApi.getBangSuggestions "!g"
+            testTask "google bang phrases" {
+                let! results = DuckDuckGoApi.getBangSuggestions "!g" CancellationToken.None
 
                 results
                     |> List.tryFind (fun r -> r.phrase = "!g" && r.snippet = "Google")
@@ -44,22 +46,22 @@ let allTests =
             }
         ]
 
-        testAsync "DuckDuckGoApi.getBangSearchResults" {
-            let! result = DuckDuckGoApi.getBangSearchResults "!gh" "Wox Plugin"
+        testTask "DuckDuckGoApi.getBangSearchResults" {
+            let! result = DuckDuckGoApi.getBangSearchResults "!gh" "Wox Plugin" CancellationToken.None
 
             result.Redirect |> Expect.equal "redirect URL should match" "https://github.com/search?utf8=%E2%9C%93&q=Wox%20Plugin"
         }
 
         testList "QueryImpl.handleQuery" [
 
-            testAsync "no query terms" {
-                let! results = QueryImpl.handleQuery ("", "")
+            testTask "no query terms" {
+                let! (results: list<Result>) = QueryImpl.handleQuery ("", "") CancellationToken.None
 
                 results |> Expect.isEmpty "should be empty"
             }
 
-            testAsync "just a bang phrase" {
-                let! results = QueryImpl.handleQuery ("!imdb", "")
+            testTask "just a bang phrase" {
+                let! (results: list<Result>) = QueryImpl.handleQuery ("!imdb", "") CancellationToken.None
                 let actual = List.tryHead results
 
                 actual                  |> Expect.isSome "results should not be empty"
@@ -67,8 +69,8 @@ let allTests =
                 actual.Value.SubTitle   |> Expect.equal "result subtitle should equal" "Type a search term"
             }
 
-            testAsync "just a bang phrase, again" {
-                let! results = QueryImpl.handleQuery ("!tw", "")
+            testTask "just a bang phrase, again" {
+                let! (results: list<Result>) = QueryImpl.handleQuery ("!tw", "") CancellationToken.None
                 let actual = List.tryHead results
 
                 actual                  |> Expect.isSome "results should not be empty"
@@ -76,15 +78,15 @@ let allTests =
                 actual.Value.SubTitle   |> Expect.equal "result subtitle should equal" "Type a search term"
             }
 
-            testAsync "bang phrase and search" {
-                let! results = QueryImpl.handleQuery ("!gh", "Wox")
+            testTask "bang phrase and search" {
+                let! (results: list<Result>) = QueryImpl.handleQuery ("!gh", "Wox") CancellationToken.None
                 let actual = List.tryExactlyOne results
 
                 actual                  |> Expect.isSome "there should be exactly one result"
                 actual.Value.SubTitle   |> Expect.equal "redirect URL should match" "https://github.com/search?utf8=%E2%9C%93&q=Wox"
             }
 
-            testAsync "recently used bangs" {
+            testTask "recently used bangs" {
 
                 let bangs =
                     List.replicate 50 "!yt"
@@ -92,9 +94,10 @@ let allTests =
                   @ List.replicate 10 "!lb"
 
                 for bang in bangs do
-                    do! QueryImpl.handleQuery (bang, "") |> Async.Ignore
+                    let! _ = QueryImpl.handleQuery (bang, "") CancellationToken.None
+                    ()
 
-                let! results = QueryImpl.handleQuery ("!", "")
+                let! (results: list<Result>) = QueryImpl.handleQuery ("!", "") CancellationToken.None
 
                 (results.Length, 3)
                     |> Expect.isGreaterThanOrEqual "there should be at least 3 results"
@@ -107,30 +110,34 @@ let allTests =
 
         testList "cached methods" [
 
-            testAsync "getBangSuggestions performance" {
+            testTask "getBangSuggestions performance" {
 
                 let notCached () =
-                    DuckDuckGoApi.getBangSuggestions "!nf"
+                    DuckDuckGoApi.getBangSuggestions "!nf" CancellationToken.None
+                    |> Async.AwaitTask
                     |> Async.RunSynchronously
                     |> List.map (fun x -> { x with score = 0 })
 
                 let cached () =
-                    Ducky.getBangSuggestions "!nf"
+                    Ducky.getBangSuggestions "!nf" CancellationToken.None
+                    |> Async.AwaitTask
                     |> Async.RunSynchronously
                     |> List.map (fun x -> { x with score = 0 })
 
                 (notCached, cached) ||> Expect.isFasterThan "cached getBangSuggestions is faster"
             }
 
-            testAsync "getBangDetails performance" {
+            testTask "getBangDetails performance" {
 
                 let notCached () =
-                    DuckDuckGoApi.getBangDetails "!maps"
+                    DuckDuckGoApi.getBangDetails "!maps" CancellationToken.None
+                    |> Async.AwaitTask
                     |> Async.RunSynchronously
                     |> Option.map (fun x -> { x with score = 0 })
 
                 let cached () =
-                    Ducky.getBangDetails "!maps"
+                    Ducky.getBangDetails "!maps" CancellationToken.None
+                    |> Async.AwaitTask
                     |> Async.RunSynchronously
                     |> Option.map (fun x -> { x with score = 0 })
 

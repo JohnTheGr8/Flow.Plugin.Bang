@@ -20,15 +20,18 @@ module DuckDuckGoApi =
 
     open Newtonsoft.Json
     open RestSharp
+    open IcedTasks
 
     let private httpClient = new RestClient()
 
-    let private getResponse<'response> request = async {
+    let private getResponse<'response> request = cancellableTask {
         let! token =
-            Async.CancellationToken
+            CancellableTask.getCancellationToken()
 
         let! response =
-            httpClient.ExecuteAsync(request, token) |> Async.AwaitTask
+            httpClient.ExecuteAsync(request, token)
+
+        do token.ThrowIfCancellationRequested()
 
         return JsonConvert.DeserializeObject<'response> response.Content
     }
@@ -49,7 +52,7 @@ module DuckDuckGoApi =
 
         getResponse<BangResult> request
 
-    let getBangDetails bang = async {
+    let getBangDetails bang = cancellableTask {
         let! suggestions =
             getBangSuggestions bang
 
@@ -58,6 +61,7 @@ module DuckDuckGoApi =
 
 module Ducky =
     open System.Collections.Concurrent
+    open IcedTasks
 
     /// we cache every found bang search term and its search results
     let private bangSuggestionsCache =
@@ -68,7 +72,7 @@ module Ducky =
         ConcurrentDictionary<string, BangDetails> ()
 
     /// DuckDuckGoApi.getBangSuggestions with caching
-    let getBangSuggestions bang = async {
+    let getBangSuggestions bang = cancellableTask {
         match bangSuggestionsCache.TryGetValue bang with
         | true, res ->
             // if a full bang was typed and it exists in our knownBangsCache, bump its score
@@ -93,7 +97,7 @@ module Ducky =
         }
 
     /// DuckDuckGoApi.getBangDetails with caching
-    let getBangDetails bang = async {
+    let getBangDetails bang = cancellableTask {
         match knownBangsCache.TryGetValue bang with
         | true, res ->
             let result = { res with score = res.score + 1 }
@@ -110,8 +114,8 @@ module Ducky =
                 return None
         }
 
-    /// combine getBangDetails and getBangSuggestions, 
-    let searchWithBang bang siteSearch = async {
+    /// combine getBangDetails and getBangSuggestions,
+    let searchWithBang bang siteSearch = cancellableTask {
         match! getBangDetails bang with
         | Some details ->
             let! result = DuckDuckGoApi.getBangSearchResults bang siteSearch
@@ -129,8 +133,7 @@ module Ducky =
         if knownBangsCache.IsEmpty then
             getBangSuggestions "!"
         else
-            async {
-                return knownBangsCache.Values
-                    |> Seq.sortByDescending (fun b -> b.score)
-                    |> List.ofSeq
-            }
+            knownBangsCache.Values
+                |> Seq.sortByDescending (fun b -> b.score)
+                |> List.ofSeq
+                |> CancellableTask.singleton

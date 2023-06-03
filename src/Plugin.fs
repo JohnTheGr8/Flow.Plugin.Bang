@@ -4,7 +4,7 @@ open Flow.Launcher.Plugin
 open System
 open System.Collections.Generic
 open System.Threading
-open System.Threading.Tasks
+open IcedTasks
 
 module PluginResult =
 
@@ -85,37 +85,47 @@ module QueryImpl =
         | BangSearch ("!", "") ->
             // just the bang symbol was typed
             Ducky.getBangSuggestionsOrDefault ()
-            |> AsyncList.map PluginResult.ofBangSuggestion
+            |> CancellableTask.map (List.map PluginResult.ofBangSuggestion)
 
         | BangSearch (bang, "") ->
             // just a bang typed
             Ducky.getBangSuggestions bang
-            |> AsyncList.map (PluginResult.ofBangDetails bang)
+            |> CancellableTask.map (List.map (PluginResult.ofBangDetails bang))
 
         | BangSearch (bang, siteSearch) ->
             // bang phrase and search
             Ducky.searchWithBang bang siteSearch
-            |> Async.foldOption PluginResult.ofBangSearch (PluginResult.bangUnknown bang)
-            |> AsyncList.singleton
+            |> CancellableTask.map (function
+                | Some result -> List.singleton (PluginResult.ofBangSearch result)
+                | None -> List.singleton (PluginResult.bangUnknown bang)
+            )
 
         | _ ->
-            async { return [] }
+            CancellableTask.singleton []
+
+    let tryHandleQuery query = 
+        cancellableTask {
+            try
+                return! handleQuery query
+            with exn ->
+                return List.singleton (PluginResult.apiError exn)
+        }
 
 type BangPlugin() =
 
     interface IAsyncPlugin with
-        member this.InitAsync (context: PluginInitContext) : Task =
-            PluginResult.PluginContext <- context
+        member __.InitAsync (context: PluginInitContext) =
+            task {
+                PluginResult.PluginContext <- context
+                // run a search to fill our cache
+                let! _ = QueryImpl.handleQuery ("!", "") CancellationToken.None
 
-            QueryImpl.handleQuery ("!", "")
-            |> Async.StartAsTask :> Task
+                ()
+            }
 
         member __.QueryAsync(query: Query, token: CancellationToken) =
-            let asyncQuery =
-                QueryImpl.handleQuery (query.FirstSearch, query.SecondToEndSearch)
-                |> Async.Catch
-                |> Async.map (function
-                    | Choice1Of2 results -> List<Result> results
-                    | Choice2Of2 error   -> List<Result> [ PluginResult.apiError error ])
+            task {
+                let! results = QueryImpl.tryHandleQuery (query.FirstSearch, query.SecondToEndSearch) token
 
-            Async.StartImmediateAsTask(asyncQuery, token)
+                return List<Result> results
+            }
