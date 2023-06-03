@@ -129,3 +129,13 @@ type BangPlugin() =
 
                 return List<Result> results
             }
+
+    interface IAsyncReloadable with
+        member __.ReloadDataAsync () =
+            task {
+                do Ducky.clearCache ()
+                // run a search to fill our cache
+                let! _ = QueryImpl.handleQuery ("!", "") CancellationToken.None
+
+                ()
+            }

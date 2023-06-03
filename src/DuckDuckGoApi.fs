@@ -71,6 +71,10 @@ module Ducky =
     let private knownBangsCache =
         ConcurrentDictionary<string, BangDetails> ()
 
+    let clearCache () = 
+        do bangSuggestionsCache.Clear()
+        do knownBangsCache.Clear()
+
     /// DuckDuckGoApi.getBangSuggestions with caching
     let getBangSuggestions bang = cancellableTask {
         match bangSuggestionsCache.TryGetValue bang with
