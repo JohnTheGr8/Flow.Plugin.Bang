@@ -27,4 +27,13 @@ test_script:
 
 artifacts:
     - path: src\bin\Release\*.nupkg
-    - path: '*.zip'
+    - path: Flow.Plugin.Bang.zip
+
+deploy:
+  - provider: GitHub
+    auth_token:
+      secure: uutZyyZM0SOZA9RjyvQqv8vnvstvjr9uYxEejFPmX04o3AWnBcZA9ePXGJfF9a8R
+    artifact: Flow.Plugin.Bang.zip
+    draft: true
+    on:
+      APPVEYOR_REPO_TAG: true
