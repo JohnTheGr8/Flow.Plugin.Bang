@@ -23,7 +23,7 @@ module PluginResult =
             Title     = search.phrase,
             SubTitle  = "Search " + search.snippet,
             Score     = search.score,
-            IcoPath   = "icon.png",
+            IcoPath   = search.image,
             Action    = (fun _ -> changeQuery search.phrase),
             // autocomplete emulates the ChangeQuery behaviour
             AutoCompleteText = search.phrase + " "
@@ -33,7 +33,7 @@ module PluginResult =
         Result (
             Title      = details.phrase + " : search " + details.snippet,
             SubTitle   = "Type a search term",
-            IcoPath    = "icon.png",
+            IcoPath    = details.image,
             Score      = details.score,
             Action     = (fun _ -> changeQuery details.phrase),
             // autocomplete emulates the ChangeQuery behaviour
@@ -50,7 +50,7 @@ module PluginResult =
             Title      = title,
             SubTitle   = result.redirect,
             Score      = 10000,
-            IcoPath    = "icon.png",
+            IcoPath    = result.bang.image,
             Action     = (fun _ -> openUrl result.redirect),
             CopyText   = result.redirect,
             AutoCompleteText = result.redirect,
