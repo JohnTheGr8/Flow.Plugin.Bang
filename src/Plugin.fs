@@ -43,8 +43,8 @@ module PluginResult =
         )
 
     let ofBangSearch (result: BangSearchResult) =
-        let title = $"Search %s{result.bang.snippet} for '%s{result.search}'"
-        let hlStart = title.IndexOf result.search
+        let title   = $"Search %s{result.bang.snippet} for '%s{result.search}'"
+        let hlStart = $"Search %s{result.bang.snippet} for '".Length
 
         Result (
             Title      = title,
