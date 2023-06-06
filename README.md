@@ -9,7 +9,7 @@ Take advantage of [DuckDuckGo's bangs](https://duckduckgo.com/bang) to search on
 
 ### Demo
 
-![demo gif](https://user-images.githubusercontent.com/697917/151886107-1ea5f15b-1cfc-4bee-8ad0-1ed42e26302a.gif)
+![demo gif](https://github.com/JohnTheGr8/Flow.Plugin.Bang/assets/697917/8cc34169-f033-4426-b142-3ceff6b33565)
 
 ### Credits
 
