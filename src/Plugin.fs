@@ -118,7 +118,7 @@ type BangPlugin() =
             task {
                 PluginResult.PluginContext <- context
                 // run a search to fill our cache
-                let! _ = QueryImpl.handleQuery ("!", "") CancellationToken.None
+                let! _ = QueryImpl.tryHandleQuery ("!", "") CancellationToken.None
 
                 ()
             }
@@ -135,7 +135,7 @@ type BangPlugin() =
             task {
                 do Ducky.clearCache ()
                 // run a search to fill our cache
-                let! _ = QueryImpl.handleQuery ("!", "") CancellationToken.None
+                let! _ = QueryImpl.tryHandleQuery ("!", "") CancellationToken.None
 
                 ()
             }
