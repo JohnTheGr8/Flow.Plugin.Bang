@@ -22,7 +22,12 @@ module DuckDuckGoApi =
     open RestSharp
     open IcedTasks
 
-    let private httpClient = new RestClient()
+    let private httpClient = 
+        new RestClient(
+            RestClientOptions(
+                ThrowOnAnyError = true
+            )
+        )
 
     let private getResponse<'response> request = cancellableTask {
         let! token =

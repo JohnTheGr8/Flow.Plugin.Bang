@@ -108,6 +108,11 @@ module QueryImpl =
             try
                 return! handleQuery query
             with exn ->
+                do PluginResult.PluginContext.API.LogException (
+                    "QueryImpl.tryHandleQuery",
+                    $"failed to handle query %A{query}",
+                    exn
+                )
                 return List.singleton (PluginResult.apiError exn)
         }
 
