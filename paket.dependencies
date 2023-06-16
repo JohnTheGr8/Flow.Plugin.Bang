@@ -5,6 +5,5 @@ framework: auto-detect
 nuget Flow.Launcher.Plugin
 nuget IcedTasks
 nuget RestSharp
-nuget Newtonsoft.Json
 nuget FSharp.Core
 nuget Expecto

@@ -18,44 +18,47 @@ type BangSearchResult =
 
 module DuckDuckGoApi =
 
-    open Newtonsoft.Json
     open RestSharp
     open IcedTasks
 
     let private httpClient = 
         new RestClient(
             RestClientOptions(
-                ThrowOnAnyError = true
+                ThrowOnAnyError = true,
+                ThrowOnDeserializationError = true
             )
         )
 
-    let private getResponse<'response> request = cancellableTask {
+    let getBangSuggestions (bang: string) = cancellableTask {
         let! token =
             CancellableTask.getCancellationToken()
 
-        let! response =
-            httpClient.ExecuteAsync(request, token)
+        let parameters = 
+            {| q = bang |}
 
-        do token.ThrowIfCancellationRequested()
-
-        return JsonConvert.DeserializeObject<'response> response.Content
+        return!
+            httpClient.GetJsonAsync<BangPhraseSuggestion list> (
+                "https://duckduckgo.com/ac/",
+                parameters,
+                token)
     }
 
-    let getBangSuggestions (bang: string) =
-        let request = 
-            RestRequest( "https://duckduckgo.com/ac/", Method.Get )
-                .AddParameter("q", bang)
+    let getBangSearchResults bang siteSearch = cancellableTask {
+        let! token =
+            CancellableTask.getCancellationToken()
 
-        getResponse<BangPhraseSuggestion list> request
+        let parameters = 
+            {| q = $"%s{bang} %s{siteSearch}"
+               format = "json"
+               no_redirect = 1 |}
 
-    let getBangSearchResults bang siteSearch =
-        let request =
-            RestRequest( "https://api.duckduckgo.com/", Method.Get )
-                .AddParameter("q", $"%s{bang} %s{siteSearch}")
-                .AddParameter("format", "json")
-                .AddParameter("no_redirect", 1)
-
-        getResponse<BangResult> request
+        return!
+            httpClient.GetJsonAsync<BangResult> (
+                "https://api.duckduckgo.com/",
+                parameters,
+                token
+        )
+    }
 
     let getBangDetails bang = cancellableTask {
         let! suggestions =
