@@ -15,6 +15,7 @@ Take advantage of [DuckDuckGo's bangs](https://duckduckgo.com/bang) to search on
 
 - [RestSharp](https://github.com/restsharp/RestSharp) : Simple REST and HTTP API Client for .NET
 - [Expecto](https://github.com/haf/expecto) : A smooth testing lib for F#
+- [IcedTasks](https://github.com/TheAngryByrd/IcedTasks) : F# Cold Tasks and Cancellable Tasks
 
 ### License
 

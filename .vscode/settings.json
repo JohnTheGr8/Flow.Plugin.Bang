@@ -10,5 +10,6 @@
         ".vs/": true,
         ".ionide/": true,
         "*.wox": true,
-    }
+    },
+    "FSharp.inlayHints.typeAnnotations": false
 }
