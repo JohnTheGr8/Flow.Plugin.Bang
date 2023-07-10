@@ -36,11 +36,13 @@ module DuckDuckGoApi =
         let parameters = 
             {| q = bang |}
 
-        return!
-            httpClient.GetJsonAsync<BangPhraseSuggestion list> (
+        let! results =
+            httpClient.GetJsonAsync<BangPhraseSuggestion seq> (
                 "https://duckduckgo.com/ac/",
                 parameters,
                 token)
+
+        return List.ofSeq results
     }
 
     let getBangSearchResults bang siteSearch = cancellableTask {
